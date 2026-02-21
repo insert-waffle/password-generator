@@ -15,9 +15,9 @@ Production-ready, Dockerized password sharing service with AES-256-GCM encryptio
 3. Open the app:
   - http://localhost
 
-## Deployment options
+## Deployment options (recommended: pull the images)
 
-### Pull the published container images
+### Pull the published container images (recommended)
 
 Images are published on Docker Hub:
 
@@ -100,16 +100,9 @@ For HTTPS, terminate TLS in front of the stack (e.g., a managed load balancer or
 
 ### Build it yourself (optional)
 
-You can build the app image locally and run the full stack:
-
-1. Build:
-  - `docker compose build`
-2. Run:
-  - `docker compose up -d`
-
-If you prefer a standalone image build:
-- `docker build -t password-generator-app ./app`
-- Then reference that image in [docker-compose.yml](docker-compose.yml).
+If you want to build locally, run:
+- `docker compose build`
+- `docker compose up -d`
 
 ## API
 
