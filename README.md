@@ -48,8 +48,6 @@ services:
     container_name: password-generator_nginx
     ports:
       - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - app
     networks:
@@ -82,6 +80,8 @@ networks:
   internal:
     internal: true
 ```
+
+Note: the published Nginx image already includes the config, so no local `nginx.conf` bind mount is required.
 
 ### Host it yourself (server or VM)
 
