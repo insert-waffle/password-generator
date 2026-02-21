@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: waffle047/password-generator-nginx
+    image: nginx:alpine
     container_name: password-generator_nginx
     ports:
       - "80:80"
@@ -13,7 +13,7 @@ services:
       - internal
 
   app:
-    image: waffle047/password-generator
+    build: ./app
     container_name: password-generator_app
     env_file:
       - .env

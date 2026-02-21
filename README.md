@@ -24,11 +24,7 @@ Images are published on Docker Hub:
 - App: `waffle047/password-generator`
 - Nginx: `waffle047/password-generator-nginx`
 
-1. Update [docker-compose.yml](docker-compose.yml) to use the published images:
-  - Replace `build: ./app` with `image: waffle047/password-generator`
-  - Replace `image: nginx:alpine` with `image: waffle047/password-generator-nginx`
-
-2. Start the stack (Compose will pull images automatically):
+1. Start the stack (Compose will pull images automatically):
   - `docker compose up -d`
 
 This keeps the rest of the stack (Redis + network layout) the same.
