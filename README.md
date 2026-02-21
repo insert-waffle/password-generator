@@ -13,7 +13,7 @@ Production-ready, Dockerized password sharing service with AES-256-GCM encryptio
    - `docker compose up -d --build`
 
 3. Open the app:
-  - http://localhost:8126
+  - http://localhost
 
 ## Deployment options
 
