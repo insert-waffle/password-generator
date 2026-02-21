@@ -216,9 +216,7 @@ Response (200):
     "faviconUrl": "https://...",
     "title": "...",
     "tagline": "...",
-    "siteTitle": "...",
-    "footerPrimary": "",
-    "footerSecondary": ""
+    "siteTitle": "..."
   }
 }
 ```

@@ -31,8 +31,6 @@ const favicon = document.getElementById("favicon");
 const brandLogo = document.getElementById("brand-logo");
 const brandTitle = document.getElementById("brand-title");
 const brandTagline = document.getElementById("brand-tagline");
-const footerPrimary = document.getElementById("footer-primary");
-const footerSecondary = document.getElementById("footer-secondary");
 
 const DEFAULT_PASSWORD_LENGTH = 20;
 let publicBaseUrl = "";
@@ -53,12 +51,6 @@ function applyBranding(branding) {
   }
   if (branding.tagline && brandTagline) {
     brandTagline.textContent = branding.tagline;
-  }
-  if (branding.footerPrimary && footerPrimary) {
-    footerPrimary.textContent = branding.footerPrimary;
-  }
-  if (branding.footerSecondary && footerSecondary) {
-    footerSecondary.textContent = branding.footerSecondary;
   }
   if (branding.siteTitle) {
     document.title = branding.siteTitle;

@@ -224,9 +224,7 @@ app.get("/api/config", (req, res) => {
       faviconUrl: BRAND_FAVICON_URL,
       title: BRAND_TITLE,
       tagline: BRAND_TAGLINE,
-      siteTitle: BRAND_SITE_TITLE,
-      footerPrimary: "",
-      footerSecondary: ""
+      siteTitle: BRAND_SITE_TITLE
     }
   });
 });
