@@ -46,7 +46,9 @@ Choose one of the options below.
 
 Create a folder anywhere and add two files: `.env` and `docker-compose.yml`.
 
-docker-compose.yml
+Choose one of these compose examples:
+
+#### docker-compose.yml (persistence enabled)
 
 ``` yaml
 services:
@@ -79,7 +81,7 @@ services:
     container_name: password-generator_redis
     command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
     volumes:
-      - redis-data:/data # optional: remove to disable persistence
+      - redis-data:/data
     networks:
       - internal
 
@@ -91,6 +93,48 @@ networks:
 
 volumes:
   redis-data:
+```
+
+#### docker-compose.yml (persistence disabled)
+
+``` yaml
+services:
+  nginx:
+    image: waffle047/password-generator-nginx
+    container_name: password-generator_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    networks:
+      - public
+      - internal
+
+  app:
+    image: waffle047/password-generator
+    container_name: password-generator_app
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: password-generator_redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - internal
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    internal: true
 ```
 
 Run:
