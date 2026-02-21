@@ -9,8 +9,8 @@ Production-ready, Dockerized password sharing service with AES-256-GCM encryptio
    - Generate a key: `openssl rand -hex 32`
    - Set `ENCRYPTION_KEY` in `.env`
 
-2. Start the stack:
-   - `docker compose up -d --build`
+2. Start the stack (requires `.env` with `ENCRYPTION_KEY`):
+  - `docker compose up -d --build`
 
 3. Open the app:
   - http://localhost
@@ -24,7 +24,7 @@ Images are published on Docker Hub:
 - App: `waffle047/password-generator`
 - Nginx: `waffle047/password-generator-nginx`
 
-1. Start the stack (Compose will pull images automatically):
+1. Start the stack (requires `.env` with `ENCRYPTION_KEY`; Compose will pull images automatically):
   - `docker compose up -d`
 
 This keeps the rest of the stack (Redis + network layout) the same.
