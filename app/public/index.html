@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Password generator</title>
+    <link id="favicon" rel="icon" href="data:," />
+    <script>
+      (function () {
+        try {
+          const branding = JSON.parse(localStorage.getItem("branding") || "null");
+          if (!branding) return;
+          if (branding.primaryColor) {
+            document.documentElement.style.setProperty("--primary", branding.primaryColor);
+          }
+          if (branding.siteTitle) {
+            document.title = branding.siteTitle;
+          }
+          if (branding.faviconUrl) {
+            const icon = document.querySelector("link[rel='icon']");
+            if (icon) icon.href = branding.faviconUrl;
+          }
+        } catch (err) {
+          // ignore
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <img id="brand-logo" src="https://placehold.co/400x200?text=Logo%20Here" alt="Brand logo" class="logo" />
+      <h1 id="brand-title">Password generator</h1>
+      <p id="brand-tagline" class="subtitle">Share secrets once. Encrypted end-to-end in storage.</p>
+    </header>
+
+    <main class="container">
+      <section id="create-view" class="card">
+        <h2>Create a secret</h2>
+        <label for="password">Password</label>
+        <textarea id="password" maxlength="4096" placeholder="Paste or generate a password"></textarea>
+        <div class="row">
+          <button id="generate" class="secondary">Generate random password</button>
+          <span id="length-note">Length: 20</span>
+        </div>
+
+        <label for="length">Length</label>
+        <div class="range-row">
+          <input type="range" id="length" min="8" max="64" value="20" />
+          <span id="length-value">20</span>
+        </div>
+
+        <label>Password complexity</label>
+        <div class="options">
+          <label class="option switch">
+            <input type="checkbox" id="opt-lower" checked />
+            <span class="slider"></span>
+            Lowercase
+          </label>
+          <label class="option switch">
+            <input type="checkbox" id="opt-upper" checked />
+            <span class="slider"></span>
+            Uppercase
+          </label>
+          <label class="option switch">
+            <input type="checkbox" id="opt-number" checked />
+            <span class="slider"></span>
+            Numbers
+          </label>
+          <label class="option switch">
+            <input type="checkbox" id="opt-special" checked />
+            <span class="slider"></span>
+            Special characters
+          </label>
+        </div>
+
+        <label for="expiry-type">Expiry type</label>
+        <select id="expiry-type">
+          <option value="time" selected>Expire by date</option>
+          <option value="views">Expire after views</option>
+        </select>
+
+        <div id="expiry-time-row">
+          <label for="expiry">Expiry</label>
+          <select id="expiry">
+            <option value="86400">1 day</option>
+            <option value="604800" selected>7 days</option>
+            <option value="864000">10 days</option>
+            <option value="one-time">After first view</option>
+          </select>
+        </div>
+
+        <div id="views-row" class="views-row hidden">
+          <label for="views-limit">Allowed views</label>
+          <input type="number" id="views-limit" min="1" max="50" value="3" />
+        </div>
+
+        <button id="share" class="primary">Create share link</button>
+
+        <div id="result" class="result hidden">
+          <p>Share this link:</p>
+          <div class="link-row">
+            <input id="share-link" readonly />
+            <button id="copy-link" class="secondary">Copy</button>
+          </div>
+          <p class="muted">The password is never stored in plaintext.</p>
+        </div>
+      </section>
+
+      <section id="view-view" class="card hidden">
+        <h2>Secret</h2>
+        <div id="secret-output" class="secret"></div>
+        <button id="copy-secret" class="secondary hidden">Copy password</button>
+        <p id="secret-note" class="muted"></p>
+      </section>
+    </main>
+
+    <div class="security-cta">
+      <button id="security-info" class="link-button" type="button">How security works</button>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-secondary">
+          <a class="footer-github" href="https://github.com/insert-waffle/password-generator" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2C6.477 2 2 6.484 2 12.02c0 4.425 2.865 8.182 6.839 9.504.5.092.682-.217.682-.483 0-.237-.01-1.02-.014-1.849-2.782.605-3.369-1.342-3.369-1.342-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.607.069-.607 1.004.071 1.532 1.034 1.532 1.034.892 1.53 2.341 1.088 2.91.832.09-.647.35-1.088.636-1.339-2.22-.253-4.555-1.114-4.555-4.959 0-1.095.39-1.99 1.03-2.69-.103-.253-.446-1.27.098-2.647 0 0 .84-.27 2.75 1.027a9.564 9.564 0 0 1 2.504-.338c.85.004 1.705.115 2.504.338 1.909-1.297 2.748-1.027 2.748-1.027.545 1.377.202 2.394.1 2.647.64.7 1.028 1.595 1.028 2.69 0 3.855-2.339 4.703-4.566 4.95.359.31.679.92.679 1.855 0 1.338-.012 2.416-.012 2.744 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.02C22 6.484 17.523 2 12 2Z" fill="currentColor"/>
+            </svg>
+            Find this project on GitHub
+          </a>
+          <span id="copyright">Copyright © 2026 <a class="footer-link" href="https://github.com/insert-waffle" target="_blank" rel="noreferrer">insert-waffle</a> | <span id="footer-version">v0.1</span></span>
+        </div>
+      </div>
+    </footer>
+
+    <div id="security-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="security-title">
+      <div class="modal-content">
+        <button id="security-close" class="modal-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <h2 id="security-title">How your secret is protected</h2>
+        <ul class="modal-list">
+          <li>Passwords are encrypted with AES-256-GCM before storage; only ciphertext + IV + auth tag are stored.</li>
+          <li>Each secret is stored at `secret:&lt;uuid&gt;` in Redis; there is no list or search endpoint.</li>
+          <li>Requests without a valid UUID return 404, so the ID is the only lookup key.</li>
+          <li>Redis TTL enforces expiry, and one-time secrets are deleted immediately after a successful read.</li>
+          <li>Nginx + Express rate limits reduce automated guessing attempts.</li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
