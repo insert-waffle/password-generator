@@ -1,35 +1,21 @@
-# Password Generator & Secure Sharing Service
+# Password Generator & Secure sharing
 
-Production-ready, Docker-native password generator and one-time secret sharing service.
-Built for safe internet exposure with strong encryption, short-lived storage, and minimal attack surface.
+Simple, Docker-based password generator and one-time secret sharing service.
 
-------------------------------------------------------------------------
+Demo: https://password.ntcu.be/
 
 ## Features
 
 - AES-256-GCM encryption
-- Redis-backed ephemeral storage
-- Per-secret TTL + optional one-time retrieval
-- No database persistence
-- Rate limiting at Nginx and app layers
-- Fully Dockerized
-- Custom branding via environment variables
-
-------------------------------------------------------------------------
-
-## Architecture
-
-Client → Nginx (rate limiting, reverse proxy) → Node.js App (encryption, API) → Redis (in-memory TTL only)
-
-Only Nginx exposes a public port. Redis is isolated on an internal Docker network.
-
-------------------------------------------------------------------------
+- Redis-backed storage with TTL (persistence optional, keeping secrets after restart of Redis container)
+- One-time secrets (optional)
+- Nginx + app rate limiting
+- Custom branding via `.env`
 
 ## Requirements
 
 - Docker
 - Docker Compose v2+
-- 32-byte encryption key
 
 Generate a key:
 
@@ -37,38 +23,30 @@ Generate a key:
 openssl rand -hex 32
 ```
 
-------------------------------------------------------------------------
+## Install / Run
 
-## Quick Start (recommended: Docker Compose)
-
-1. Create the environment file:
+1. Create `.env` (required for both options):
 
 ``` bash
 cp .env.example .env
 ```
 
-2. Set required values in `.env`:
+Set at least:
 
 ``` bash
-ENCRYPTION_KEY=<your 32 byte hex key>
+ENCRYPTION_KEY=<32 byte hex>
 PUBLIC_BASE_URL=http://localhost
 ```
 
-3. Start the stack (uses published images):
+2. Pull or Build the App's Image:
 
-``` bash
-docker compose up -d
-```
+Choose one of the options below.
 
-4. Open:
+### Option A — Pull Pre-built Image (recommended)
 
-http://localhost
+Create a folder anywhere and add two files: `.env` and `docker-compose.yml`.
 
-------------------------------------------------------------------------
-
-## Docker Compose Reference
-
-Minimal production compose (published images):
+docker-compose.yml
 
 ``` yaml
 services:
@@ -99,7 +77,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: password-generator_redis
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data # optional: remove to disable persistence
     networks:
       - internal
 
@@ -108,62 +88,29 @@ networks:
     driver: bridge
   internal:
     internal: true
+
+volumes:
+  redis-data:
 ```
 
-Notes:
+Run:
 
-- Redis persistence disabled
-- No bind mounts required
-- Internal network prevents Redis exposure
-- Only port 80 exposed
+``` bash
+docker compose up -d
+```
 
-If you want to build locally, use [docker-compose.build.yml](docker-compose.build.yml).
+Open:
 
-------------------------------------------------------------------------
+http://localhost
 
-## Production Deployment
+### Option B — Build from Source
 
-### TLS Termination
-
-Do not expose this stack directly on the internet without TLS.
-
-Terminate TLS using:
-
--   Reverse proxy
--   Cloud load balancer
--   Caddy
--   Traefik
--   Nginx proxy manager
-
-Forward traffic to container port 80.
-
-------------------------------------------------------------------------
-
-## Security Model
-
-### Encryption
-
-Secrets are encrypted using AES 256 GCM before storage.\
-Redis only stores encrypted payloads.
-
-### Storage
-
--   In memory only
--   TTL enforced by Redis
--   Optional one time retrieval deletion
--   No disk persistence
-
-### Rate Limiting
-
--   Nginx level
--   Express middleware level
-
-### Attack Surface
-
--   Only Nginx is publicly reachable
--   App and Redis isolated in internal network
-
-------------------------------------------------------------------------
+``` bash
+git clone https://github.com/insert-waffle/password-generator.git
+cd password-generator
+cp .env.example .env
+docker compose up -d --build
+```
 
 ## Environment Variables
 
@@ -185,15 +132,17 @@ BRAND_TAGLINE=Secure sharing
 BRAND_SITE_TITLE=Your App
 ```
 
-If `PUBLIC_BASE_URL` is unset, the browser origin is used.
+## API
 
-------------------------------------------------------------------------
+Base URL: `http://<host>`
 
-## API Reference
+### POST /api/secret
 
-### Create Secret
+Create a new secret.
 
-POST `/api/secret`
+Headers:
+
+- `Content-Type: application/json`
 
 Body:
 
@@ -201,56 +150,75 @@ Body:
 {
   "password": "string",
   "expirySeconds": 86400,
-  "oneTime": false
+  "oneTime": false,
+  "viewsLimit": 3
 }
 ```
 
-Response:
+Fields:
+
+- `password` (string, required) — max 4096 chars.
+- `expirySeconds` (integer, required) — must be > 0 and <= `MAX_EXPIRY_SECONDS` (default 2592000).
+- `oneTime` (boolean, optional) — delete after first successful read.
+- `viewsLimit` (integer, optional) — if provided, allowed views (1–50). When set, expiry is forced to `MAX_EXPIRY_SECONDS`.
+
+Response (201):
+
+``` json
+{ "id": "uuid-v4" }
+```
+
+Errors:
+
+- 400 — missing/invalid fields, password too long, invalid `expirySeconds` or `viewsLimit`
+- 413 — payload too large (body limit 1mb)
+- 415 — wrong content type
+- 429 — rate limited
+
+### GET /api/secret/:id
+
+Retrieve and decrypt a secret.
+
+Response (200):
 
 ``` json
 {
-  "id": "uuid"
+  "password": "decrypted password",
+  "oneTime": false,
+  "expiresAt": 1771680459214,
+  "remainingViews": 2
 }
 ```
 
-------------------------------------------------------------------------
+Notes:
 
-### Retrieve Secret
+- `expiresAt` is included for non-one-time secrets when known.
+- `remainingViews` is included when `viewsLimit` was set.
 
-GET `/api/secret/:id`
+Errors:
 
-Response:
+- 404 — not found, expired, deleted, or invalid UUID
+- 500 — corrupted or undecryptable payload
+
+### GET /api/config
+
+Returns public configuration and branding data used by the UI.
+
+Response (200):
 
 ``` json
 {
-  "password": "decrypted password"
+  "publicBaseUrl": "https://example.com",
+  "version": "0.1.0",
+  "branding": {
+    "primaryColor": "#cc2936",
+    "logoUrl": "https://...",
+    "faviconUrl": "https://...",
+    "title": "...",
+    "tagline": "...",
+    "siteTitle": "...",
+    "footerPrimary": "",
+    "footerSecondary": ""
+  }
 }
 ```
-
-Returns 404 if expired, deleted, or not found.
-
-------------------------------------------------------------------------
-
-## Operational Notes
-
-- Redis data is lost on container restart (intentional)
-- Use container healthchecks in production
-- Consider running behind a WAF or fail2ban
-
-View logs:
-
-``` bash
-docker compose logs -f
-```
-
-------------------------------------------------------------------------
-
-## Recommended Hardening
-
-For internet exposure:
-
--   Enable upstream rate limiting
--   Use a firewall
--   Restrict management access to Docker host
--   Rotate encryption key only when secrets are expired
--   Use read only root filesystem in production if extending images

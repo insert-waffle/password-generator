@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: waffle047/password-generator-nginx
+    image: nginx:alpine
     container_name: password-generator_nginx
     ports:
       - "80:80"
@@ -13,7 +13,7 @@ services:
       - internal
 
   app:
-    image: waffle047/password-generator
+    build: ./app
     container_name: password-generator_app
     env_file:
       - .env
@@ -28,7 +28,9 @@ services:
   redis:
     image: redis:7-alpine
     container_name: password-generator_redis
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redis-data:/data
     networks:
       - internal
 
@@ -37,3 +39,6 @@ networks:
     driver: bridge
   internal:
     internal: true
+
+volumes:
+  redis-data:
