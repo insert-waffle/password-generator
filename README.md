@@ -1,37 +1,99 @@
-# Password Generator
+# Password Generator & Secure Sharing Service
 
-Production-ready, Dockerized password sharing service with AES-256-GCM encryption, Redis-backed TTL storage, one-time secrets, and a branded UI.
+Production ready, Docker native password generator and one time secret
+sharing service.
 
-## Quick start
+Built for secure internet exposure with strong encryption, short lived
+storage, and minimal attack surface.
 
-1. Create an environment file:
-   - Copy `.env.example` to `.env`
-   - Generate a key: `openssl rand -hex 32`
-   - Set `ENCRYPTION_KEY` in `.env`
+------------------------------------------------------------------------
 
-2. Start the stack (requires `.env` with `ENCRYPTION_KEY`):
-  - `docker compose up -d --build`
+## Features
 
-3. Open the app:
-  - http://localhost
+-   AES 256 GCM encryption
+-   Redis backed ephemeral storage
+-   Per secret TTL support
+-   One time retrieval option
+-   No database persistence
+-   Rate limiting at Nginx and application layer
+-   Fully Dockerized
+-   Custom branding via environment variables
+-   Internet safe deployment pattern
 
-## Deployment options (recommended: Docker Compose)
+------------------------------------------------------------------------
 
-### Use Docker Compose (recommended)
+## Architecture
 
-Images are published on Docker Hub:
+Client\
+↓\
+Nginx (rate limiting, reverse proxy)\
+↓\
+Node.js App (encryption, API)\
+↓\
+Redis (in memory TTL storage only)
 
-- App: `waffle047/password-generator`
-- Nginx: `waffle047/password-generator-nginx`
+Only Nginx exposes a public port.\
+Redis is isolated on an internal Docker network.
 
-1. Start the stack (requires `.env` with `ENCRYPTION_KEY`; Compose will pull images automatically):
-  - `docker compose up -d`
+------------------------------------------------------------------------
 
-This keeps the rest of the stack (Redis + network layout) the same.
+## Requirements
 
-Example `docker-compose.yml` (copy/paste):
+-   Docker
+-   Docker Compose v2+
+-   32 byte encryption key
 
-```yaml
+Generate a key:
+
+``` bash
+openssl rand -hex 32
+```
+
+------------------------------------------------------------------------
+
+## Quick Start
+
+### 1. Create environment file
+
+``` bash
+cp .env.example .env
+```
+
+Edit `.env` and set:
+
+``` bash
+ENCRYPTION_KEY=<your 32 byte hex key>
+PUBLIC_BASE_URL=http://localhost
+```
+
+### 2. Start stack
+
+If using published images:
+
+``` bash
+docker compose up -d
+```
+
+If building locally:
+
+``` bash
+docker compose build
+docker compose up -d
+```
+
+### 3. Access
+
+Open:
+
+http://localhost
+
+------------------------------------------------------------------------
+
+## Docker Compose Reference
+
+Minimal production compose:
+
+``` yaml
 services:
   nginx:
     image: waffle047/password-generator-nginx
@@ -66,39 +128,96 @@ services:
 
 networks:
   public:
-    driver: bridge
   internal:
     internal: true
 ```
 
-Note: the published Nginx image already includes the config, so no local `nginx.conf` bind mount is required.
+Design decisions:
 
-### Host it yourself (server or VM)
+-   Redis persistence disabled
+-   No bind mounts required
+-   Internal network prevents Redis exposure
+-   Only port 80 exposed
 
-1. Install Docker + Docker Compose on your host.
-2. Copy these files to the server:
-  - [docker-compose.yml](docker-compose.yml)
-  - [.env](.env) (create from [.env.example](.env.example))
-3. Set required env vars in `.env`:
-  - `ENCRYPTION_KEY` (32-byte hex)
-  - `PUBLIC_BASE_URL=https://yourdomain.com`
-4. Start the stack:
-  - `docker compose up -d`
+------------------------------------------------------------------------
 
-For HTTPS, terminate TLS in front of the stack (e.g., a managed load balancer or a reverse proxy like Caddy/Traefik) and forward to the Nginx container on port 80.
+## Production Deployment
 
-### Build it yourself (optional)
+### TLS Termination
 
-If you want to build locally, run:
-- `docker compose build`
-- `docker compose up -d`
+Do not expose this stack directly on the internet without TLS.
 
-## API
+Terminate TLS using:
 
-### POST /api/secret
+-   Reverse proxy
+-   Cloud load balancer
+-   Caddy
+-   Traefik
+-   Nginx proxy manager
+
+Forward traffic to container port 80.
+
+------------------------------------------------------------------------
+
+## Security Model
+
+### Encryption
+
+Secrets are encrypted using AES 256 GCM before storage.\
+Redis only stores encrypted payloads.
+
+### Storage
+
+-   In memory only
+-   TTL enforced by Redis
+-   Optional one time retrieval deletion
+-   No disk persistence
+
+### Rate Limiting
+
+-   Nginx level
+-   Express middleware level
+
+### Attack Surface
+
+-   Only Nginx is publicly reachable
+-   App and Redis isolated in internal network
+
+------------------------------------------------------------------------
+
+## Environment Variables
+
+Required:
+
+``` bash
+ENCRYPTION_KEY=<32 byte hex>
+```
+
+Optional:
+
+``` bash
+PUBLIC_BASE_URL=https://yourdomain.com
+BRAND_PRIMARY_COLOR=#000000
+BRAND_LOGO_URL=https://...
+BRAND_FAVICON_URL=https://...
+BRAND_TITLE=Your Brand
+BRAND_TAGLINE=Secure sharing
+BRAND_SITE_TITLE=Your App
+```
+
+If `PUBLIC_BASE_URL` is unset, browser origin is used.
+
+------------------------------------------------------------------------
+
+## API Reference
+
+### Create Secret
+
+POST `/api/secret`
 
 Body:
-```json
+
+``` json
 {
   "password": "string",
   "expirySeconds": 86400,
@@ -107,47 +226,52 @@ Body:
 ```
 
 Response:
-```json
+
+``` json
 {
   "id": "uuid"
 }
 ```
 
-### GET /api/secret/:id
+------------------------------------------------------------------------
+
+### Retrieve Secret
+
+GET `/api/secret/:id`
 
 Response:
-```json
+
+``` json
 {
   "password": "decrypted password"
 }
 ```
 
-If expired or missing, returns 404 JSON.
+Returns 404 if expired, deleted, or not found.
 
-## Notes
+------------------------------------------------------------------------
 
-- Redis persistence is disabled; data lives only in memory with TTL.
-- Only Nginx port 80 is exposed publicly.
-- Rate limiting is applied at both Nginx and Express layers.
+## Operational Notes
 
-## Public domain configuration
+-   Redis data is lost on container restart
+-   This is intentional
+-   Use container healthchecks in production
+-   Consider running behind fail2ban or WAF
 
-Set `PUBLIC_BASE_URL` in `.env` to control the domain used in share links. If unset, the UI falls back to the current browser origin.
+View logs:
 
-Example:
-- `PUBLIC_BASE_URL=https://yourdomain.com`
+``` bash
+docker compose logs -f
+```
 
-Share links use the root path: `https://yourdomain.com/<uuid>`.
+------------------------------------------------------------------------
 
-## Branding configuration
+## Recommended Hardening
 
-You can fully customize the UI branding via environment variables (typically in your host deployment):
+For internet exposure:
 
-- `BRAND_PRIMARY_COLOR` (CSS hex)
-- `BRAND_LOGO_URL`
-- `BRAND_FAVICON_URL`
-- `BRAND_TITLE`
-- `BRAND_TAGLINE`
-- `BRAND_SITE_TITLE`
-
-See [.env.example](.env.example) for examples. These values are passed through to the app container via the `.env` file.
+-   Enable upstream rate limiting
+-   Use a firewall
+-   Restrict management access to Docker host
+-   Rotate encryption key only when secrets are expired
+-   Use read only root filesystem in production if extending images
