@@ -167,7 +167,5 @@ You can fully customize the UI branding via environment variables (typically in 
 - `BRAND_TITLE`
 - `BRAND_TAGLINE`
 - `BRAND_SITE_TITLE`
-- `BRAND_FOOTER_PRIMARY`
-- `BRAND_FOOTER_SECONDARY`
 
 See [.env.example](.env.example) for examples. These values are passed through to the app container via the `.env` file.
