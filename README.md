@@ -15,26 +15,20 @@ Production-ready, Dockerized password sharing service with AES-256-GCM encryptio
 3. Open the app:
   - http://localhost
 
-## Deployment options (recommended: pull the images)
+## Deployment options (recommended: Docker Compose)
 
-### Pull the published container images (recommended)
+### Use Docker Compose (recommended)
 
 Images are published on Docker Hub:
 
 - App: `waffle047/password-generator`
 - Nginx: `waffle047/password-generator-nginx`
 
-To run without building:
-
-1. Pull the images:
-  - `docker pull waffle047/password-generator`
-  - `docker pull waffle047/password-generator-nginx`
-
-2. Update [docker-compose.yml](docker-compose.yml) to use the published images:
+1. Update [docker-compose.yml](docker-compose.yml) to use the published images:
   - Replace `build: ./app` with `image: waffle047/password-generator`
   - Replace `image: nginx:alpine` with `image: waffle047/password-generator-nginx`
 
-3. Start the stack:
+2. Start the stack (Compose will pull images automatically):
   - `docker compose up -d`
 
 This keeps the rest of the stack (Redis + network layout) the same.
@@ -88,7 +82,6 @@ Note: the published Nginx image already includes the config, so no local `nginx.
 1. Install Docker + Docker Compose on your host.
 2. Copy these files to the server:
   - [docker-compose.yml](docker-compose.yml)
-  - [nginx.conf](nginx.conf)
   - [.env](.env) (create from [.env.example](.env.example))
 3. Set required env vars in `.env`:
   - `ENCRYPTION_KEY` (32-byte hex)
