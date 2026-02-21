@@ -1,47 +1,35 @@
 # Password Generator & Secure Sharing Service
 
-Production ready, Docker native password generator and one time secret
-sharing service.
-
-Built for secure internet exposure with strong encryption, short lived
-storage, and minimal attack surface.
+Production-ready, Docker-native password generator and one-time secret sharing service.
+Built for safe internet exposure with strong encryption, short-lived storage, and minimal attack surface.
 
 ------------------------------------------------------------------------
 
 ## Features
 
--   AES 256 GCM encryption
--   Redis backed ephemeral storage
--   Per secret TTL support
--   One time retrieval option
--   No database persistence
--   Rate limiting at Nginx and application layer
--   Fully Dockerized
--   Custom branding via environment variables
--   Internet safe deployment pattern
+- AES-256-GCM encryption
+- Redis-backed ephemeral storage
+- Per-secret TTL + optional one-time retrieval
+- No database persistence
+- Rate limiting at Nginx and app layers
+- Fully Dockerized
+- Custom branding via environment variables
 
 ------------------------------------------------------------------------
 
 ## Architecture
 
-Client\
-↓\
-Nginx (rate limiting, reverse proxy)\
-↓\
-Node.js App (encryption, API)\
-↓\
-Redis (in memory TTL storage only)
+Client → Nginx (rate limiting, reverse proxy) → Node.js App (encryption, API) → Redis (in-memory TTL only)
 
-Only Nginx exposes a public port.\
-Redis is isolated on an internal Docker network.
+Only Nginx exposes a public port. Redis is isolated on an internal Docker network.
 
 ------------------------------------------------------------------------
 
 ## Requirements
 
--   Docker
--   Docker Compose v2+
--   32 byte encryption key
+- Docker
+- Docker Compose v2+
+- 32-byte encryption key
 
 Generate a key:
 
@@ -51,39 +39,28 @@ openssl rand -hex 32
 
 ------------------------------------------------------------------------
 
-## Quick Start
+## Quick Start (recommended: Docker Compose)
 
-### 1. Create environment file
+1. Create the environment file:
 
 ``` bash
 cp .env.example .env
 ```
 
-Edit `.env` and set:
+2. Set required values in `.env`:
 
 ``` bash
 ENCRYPTION_KEY=<your 32 byte hex key>
 PUBLIC_BASE_URL=http://localhost
 ```
 
-### 2. Start stack
-
-If using published images:
+3. Start the stack (uses published images):
 
 ``` bash
 docker compose up -d
 ```
 
-If building locally:
-
-``` bash
-docker compose build
-docker compose up -d
-```
-
-### 3. Access
-
-Open:
+4. Open:
 
 http://localhost
 
@@ -91,7 +68,7 @@ http://localhost
 
 ## Docker Compose Reference
 
-Minimal production compose:
+Minimal production compose (published images):
 
 ``` yaml
 services:
@@ -128,16 +105,19 @@ services:
 
 networks:
   public:
+    driver: bridge
   internal:
     internal: true
 ```
 
-Design decisions:
+Notes:
 
--   Redis persistence disabled
--   No bind mounts required
--   Internal network prevents Redis exposure
--   Only port 80 exposed
+- Redis persistence disabled
+- No bind mounts required
+- Internal network prevents Redis exposure
+- Only port 80 exposed
+
+If you want to build locally, use [docker-compose.build.yml](docker-compose.build.yml).
 
 ------------------------------------------------------------------------
 
@@ -205,7 +185,7 @@ BRAND_TAGLINE=Secure sharing
 BRAND_SITE_TITLE=Your App
 ```
 
-If `PUBLIC_BASE_URL` is unset, browser origin is used.
+If `PUBLIC_BASE_URL` is unset, the browser origin is used.
 
 ------------------------------------------------------------------------
 
@@ -253,10 +233,9 @@ Returns 404 if expired, deleted, or not found.
 
 ## Operational Notes
 
--   Redis data is lost on container restart
--   This is intentional
--   Use container healthchecks in production
--   Consider running behind fail2ban or WAF
+- Redis data is lost on container restart (intentional)
+- Use container healthchecks in production
+- Consider running behind a WAF or fail2ban
 
 View logs:
 
