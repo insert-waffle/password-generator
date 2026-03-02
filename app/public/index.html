@@ -20,39 +20,117 @@
         <h2>Create a secret</h2>
         <label for="password">Password</label>
         <textarea id="password" maxlength="4096" placeholder="Paste or generate a password"></textarea>
+
+        <label for="password-type">Password type</label>
+        <select id="password-type">
+          <option value="random" selected>Random characters</option>
+          <option value="passphrase">Passphrase sentence</option>
+        </select>
+
         <div class="row">
-          <button id="generate" class="secondary">Generate random password</button>
+          <button id="generate" class="secondary">Generate</button>
           <span id="length-note">Length: 20</span>
         </div>
 
-        <label for="length">Length</label>
-        <div class="range-row">
-          <input type="range" id="length" min="8" max="64" value="20" />
-          <span id="length-value">20</span>
+        <div id="random-options">
+          <label for="length">Length</label>
+          <div class="range-row">
+            <input type="range" id="length" min="8" max="64" value="20" />
+            <span id="length-value">20</span>
+          </div>
+
+          <label>Password complexity</label>
+          <div class="options">
+            <label class="option switch">
+              <input type="checkbox" id="opt-lower" checked />
+              <span class="slider"></span>
+              Lowercase
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="opt-upper" checked />
+              <span class="slider"></span>
+              Uppercase
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="opt-number" checked />
+              <span class="slider"></span>
+              Numbers
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="opt-special" checked />
+              <span class="slider"></span>
+              Special characters
+            </label>
+          </div>
         </div>
 
-        <label>Password complexity</label>
-        <div class="options">
-          <label class="option switch">
-            <input type="checkbox" id="opt-lower" checked />
-            <span class="slider"></span>
-            Lowercase
-          </label>
-          <label class="option switch">
-            <input type="checkbox" id="opt-upper" checked />
-            <span class="slider"></span>
-            Uppercase
-          </label>
-          <label class="option switch">
-            <input type="checkbox" id="opt-number" checked />
-            <span class="slider"></span>
-            Numbers
-          </label>
-          <label class="option switch">
-            <input type="checkbox" id="opt-special" checked />
-            <span class="slider"></span>
-            Special characters
-          </label>
+        <div id="passphrase-options" class="hidden">
+          <label for="keywords">Keywords</label>
+          <input id="keywords" type="text" placeholder="Type a keyword and press Enter" />
+          <div id="keyword-list" class="keyword-list hidden"></div>
+          <p class="helper">Press Enter to add. You can also paste multiple separated by spaces or commas.</p>
+
+          <label for="word-count">Words</label>
+          <div class="range-row">
+            <input type="range" id="word-count" min="3" max="8" value="4" />
+            <span id="word-count-value">4</span>
+          </div>
+
+          <label for="separator">Separator</label>
+          <select id="separator">
+            <option value=" ">Spaces</option>
+            <option value="-" selected>Dashes</option>
+            <option value="_">Underscores</option>
+          </select>
+
+          <label for="casing">Casing</label>
+          <select id="casing">
+            <option value="title" selected>Title Case</option>
+            <option value="lower">Lowercase</option>
+            <option value="upper">Uppercase</option>
+          </select>
+
+          <label for="pass-rand-length">Random characters</label>
+          <div class="range-row">
+            <input type="range" id="pass-rand-length" min="0" max="8" value="2" />
+            <span id="pass-rand-length-value">2</span>
+          </div>
+
+          <div class="options">
+            <label class="option switch">
+              <input type="checkbox" id="pass-rand-lower" checked />
+              <span class="slider"></span>
+              Lowercase
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="pass-rand-upper" checked />
+              <span class="slider"></span>
+              Uppercase
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="pass-rand-number" checked />
+              <span class="slider"></span>
+              Numbers
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="pass-rand-special" />
+              <span class="slider"></span>
+              Special characters
+            </label>
+          </div>
+
+          <div class="options">
+            <label class="option switch">
+              <input type="checkbox" id="pass-number" checked />
+              <span class="slider"></span>
+              Add number
+            </label>
+            <label class="option switch">
+              <input type="checkbox" id="pass-symbol" />
+              <span class="slider"></span>
+              Add symbol
+            </label>
+          </div>
         </div>
 
         <label for="expiry-type">Expiry type</label>

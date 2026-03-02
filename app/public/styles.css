@@ -283,6 +283,41 @@ button.secondary {
   color: var(--muted);
 }
 
+.helper {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.keyword-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #f0f0f5;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.keyword-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0;
+  margin-top: 0;
+  line-height: 1;
+}
+
 .hidden {
   display: none;
 }

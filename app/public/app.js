@@ -16,6 +16,23 @@ const optionLower = document.getElementById("opt-lower");
 const optionUpper = document.getElementById("opt-upper");
 const optionNumber = document.getElementById("opt-number");
 const optionSpecial = document.getElementById("opt-special");
+const passwordTypeSelect = document.getElementById("password-type");
+const randomOptions = document.getElementById("random-options");
+const passphraseOptions = document.getElementById("passphrase-options");
+const keywordsInput = document.getElementById("keywords");
+const keywordList = document.getElementById("keyword-list");
+const wordCountInput = document.getElementById("word-count");
+const wordCountValue = document.getElementById("word-count-value");
+const separatorSelect = document.getElementById("separator");
+const casingSelect = document.getElementById("casing");
+const passRandomLengthInput = document.getElementById("pass-rand-length");
+const passRandomLengthValue = document.getElementById("pass-rand-length-value");
+const passRandLower = document.getElementById("pass-rand-lower");
+const passRandUpper = document.getElementById("pass-rand-upper");
+const passRandNumber = document.getElementById("pass-rand-number");
+const passRandSpecial = document.getElementById("pass-rand-special");
+const passNumber = document.getElementById("pass-number");
+const passSymbol = document.getElementById("pass-symbol");
 
 const createView = document.getElementById("create-view");
 const viewView = document.getElementById("view-view");
@@ -33,7 +50,12 @@ const brandTitle = document.getElementById("brand-title");
 const brandTagline = document.getElementById("brand-tagline");
 
 const DEFAULT_PASSWORD_LENGTH = 20;
+const DEFAULT_WORD_COUNT = 4;
+const DEFAULT_PASS_RANDOM_LENGTH = 2;
 let publicBaseUrl = "";
+
+const keywordItems = [];
+const keywordLookup = new Set();
 
 function applyBranding(branding) {
   if (!branding) return;
@@ -99,7 +121,40 @@ function getSelectedLength() {
   return value;
 }
 
+function getSelectedWordCount() {
+  const value = Number.parseInt(wordCountInput?.value || DEFAULT_WORD_COUNT, 10);
+  if (!Number.isFinite(value) || value <= 0) {
+    return DEFAULT_WORD_COUNT;
+  }
+  return value;
+}
+
+function getSelectedRandomLength() {
+  const value = Number.parseInt(passRandomLengthInput?.value || DEFAULT_PASS_RANDOM_LENGTH, 10);
+  if (!Number.isFinite(value) || value < 0) {
+    return DEFAULT_PASS_RANDOM_LENGTH;
+  }
+  return value;
+}
+
 function syncLengthDisplay() {
+  const mode = passwordTypeSelect?.value || "random";
+  if (mode === "passphrase") {
+    const words = getSelectedWordCount();
+    const randomLength = getSelectedRandomLength();
+    const randomSuffix = randomLength > 0 ? ` + ${randomLength} chars` : "";
+    if (wordCountValue) {
+      wordCountValue.textContent = String(words);
+    }
+    if (passRandomLengthValue) {
+      passRandomLengthValue.textContent = String(randomLength);
+    }
+    if (lengthNote) {
+      lengthNote.textContent = `Words: ${words}${randomSuffix}`;
+    }
+    return;
+  }
+
   const length = getSelectedLength();
   if (lengthValue) {
     lengthValue.textContent = String(length);
@@ -142,6 +197,188 @@ function generatePassword(length) {
   const values = new Uint32Array(length);
   window.crypto.getRandomValues(values);
   return Array.from(values, (value) => charset[value % charset.length]).join("");
+}
+
+function getRandomInt(max) {
+  const values = new Uint32Array(1);
+  window.crypto.getRandomValues(values);
+  return values[0] % max;
+}
+
+function parseKeywords(text) {
+  if (!text) return [];
+  return text
+    .split(/[\s,]+/)
+    .map((word) => word.trim())
+    .filter(Boolean);
+}
+
+function normalizeKeyword(word) {
+  return word.toLowerCase();
+}
+
+function addKeywordsFromText(text) {
+  const words = parseKeywords(text);
+  words.forEach((word) => {
+    const key = normalizeKeyword(word);
+    if (!keywordLookup.has(key)) {
+      keywordLookup.add(key);
+      keywordItems.push(word);
+    }
+  });
+  renderKeywordChips();
+}
+
+function removeKeyword(word) {
+  const key = normalizeKeyword(word);
+  if (!keywordLookup.has(key)) return;
+  keywordLookup.delete(key);
+  const index = keywordItems.findIndex((item) => normalizeKeyword(item) === key);
+  if (index >= 0) {
+    keywordItems.splice(index, 1);
+  }
+  renderKeywordChips();
+}
+
+function renderKeywordChips() {
+  if (!keywordList) return;
+  keywordList.innerHTML = "";
+  keywordItems.forEach((word) => {
+    const chip = document.createElement("span");
+    chip.className = "keyword-chip";
+
+    const label = document.createElement("span");
+    label.textContent = word;
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "keyword-remove";
+    remove.setAttribute("aria-label", `Remove ${word}`);
+    remove.textContent = "x";
+    remove.addEventListener("click", () => removeKeyword(word));
+
+    chip.appendChild(label);
+    chip.appendChild(remove);
+    keywordList.appendChild(chip);
+  });
+  keywordList.classList.toggle("hidden", keywordItems.length === 0);
+}
+
+function getKeywords() {
+  const pending = parseKeywords(keywordsInput?.value || "");
+  const combined = keywordItems.concat(pending);
+  const unique = [];
+  const seen = new Set();
+  combined.forEach((word) => {
+    const key = normalizeKeyword(word);
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(word);
+    }
+  });
+  return unique;
+}
+
+function shuffleList(items) {
+  const result = items.slice();
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    const j = getRandomInt(i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+function applyCasing(word, mode) {
+  if (mode === "upper") return word.toUpperCase();
+  if (mode === "lower") return word.toLowerCase();
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+}
+
+function generatePassphrase() {
+  const keywords = getKeywords();
+  if (!keywords.length) {
+    alert("Please enter at least one keyword.");
+    return "";
+  }
+
+  const filler = [
+    "bright",
+    "swift",
+    "calm",
+    "hidden",
+    "amber",
+    "ridge",
+    "north",
+    "drift",
+    "stone",
+    "river",
+    "shadow",
+    "ember"
+  ];
+
+  const count = getSelectedWordCount();
+  const casing = casingSelect?.value || "title";
+  const separator = separatorSelect?.value || "-";
+  const words = [];
+
+  const seeded = shuffleList(keywords);
+  seeded.forEach((word) => {
+    if (words.length < count) {
+      words.push(word);
+    }
+  });
+
+  while (words.length < count) {
+    words.push(filler[getRandomInt(filler.length)]);
+  }
+
+  const sentence = shuffleList(words).map((word) => applyCasing(word, casing));
+  let passphrase = sentence.join(separator);
+
+  const randomLength = getSelectedRandomLength();
+  if (randomLength > 0) {
+    const charset = buildPassphraseCharset();
+    if (!charset) {
+      alert("Select at least one random character type.");
+      return "";
+    }
+    const values = new Uint32Array(randomLength);
+    window.crypto.getRandomValues(values);
+    passphrase += Array.from(values, (value) => charset[value % charset.length]).join("");
+  }
+
+  if (passNumber?.checked) {
+    passphrase += String(getRandomInt(10));
+  }
+
+  if (passSymbol?.checked) {
+    const symbols = ["!", "@", "#", "$", "%", "&", "?"];
+    passphrase += symbols[getRandomInt(symbols.length)];
+  }
+
+  return passphrase;
+}
+
+function buildPassphraseCharset() {
+  const parts = [];
+
+  if (passRandLower?.checked) {
+    parts.push("abcdefghijklmnopqrstuvwxyz");
+  }
+
+  if (passRandUpper?.checked) {
+    parts.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  }
+
+  if (passRandNumber?.checked) {
+    parts.push("0123456789");
+  }
+
+  if (passRandSpecial?.checked) {
+    parts.push("!@#$%^&*()-_=+[]{}<>?");
+  }
+
+  return parts.join("");
 }
 
 function isSecretRoute() {
@@ -268,7 +505,10 @@ function copyText(text) {
 
 if (generateButton) {
   generateButton.addEventListener("click", () => {
-    const generated = generatePassword(getSelectedLength());
+    const mode = passwordTypeSelect?.value || "random";
+    const generated = mode === "passphrase"
+      ? generatePassphrase()
+      : generatePassword(getSelectedLength());
     if (generated) {
       passwordField.value = generated;
       syncLengthDisplay();
@@ -279,6 +519,35 @@ if (generateButton) {
 if (lengthInput) {
   lengthInput.addEventListener("input", () => {
     syncLengthDisplay();
+  });
+}
+
+if (wordCountInput) {
+  wordCountInput.addEventListener("input", () => {
+    syncLengthDisplay();
+  });
+}
+
+if (passRandomLengthInput) {
+  passRandomLengthInput.addEventListener("input", () => {
+    syncLengthDisplay();
+  });
+}
+
+if (keywordsInput) {
+  keywordsInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addKeywordsFromText(keywordsInput.value);
+      keywordsInput.value = "";
+    }
+  });
+
+  keywordsInput.addEventListener("blur", () => {
+    if (keywordsInput.value.trim()) {
+      addKeywordsFromText(keywordsInput.value);
+      keywordsInput.value = "";
+    }
   });
 }
 
@@ -337,7 +606,7 @@ if (isSecretRoute()) {
     secretOutput.textContent = "Unable to load secret.";
   });
 } else {
-  syncLengthDisplay();
+  syncPasswordMode();
   syncExpiryMode();
   showCreateView();
 }
@@ -355,4 +624,20 @@ if (copyright) {
 
 if (expiryTypeSelect) {
   expiryTypeSelect.addEventListener("change", syncExpiryMode);
+}
+
+function syncPasswordMode() {
+  const mode = passwordTypeSelect?.value || "random";
+  if (mode === "passphrase") {
+    randomOptions?.classList.add("hidden");
+    passphraseOptions?.classList.remove("hidden");
+  } else {
+    randomOptions?.classList.remove("hidden");
+    passphraseOptions?.classList.add("hidden");
+  }
+  syncLengthDisplay();
+}
+
+if (passwordTypeSelect) {
+  passwordTypeSelect.addEventListener("change", syncPasswordMode);
 }
