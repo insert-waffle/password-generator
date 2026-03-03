@@ -256,6 +256,10 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ error: "Invalid JSON" });
   }
 
+  if (err instanceof URIError || err?.name === "URIError") {
+    return res.status(400).json({ error: "Bad request" });
+  }
+
   console.error("Unhandled error:", err);
   return res.status(500).json({ error: "Internal server error" });
 });
